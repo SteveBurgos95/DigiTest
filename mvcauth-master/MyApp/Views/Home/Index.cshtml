@@ -1,0 +1,120 @@
+﻿@model CustomUserSession
+@{
+    ViewBag.Title = "Sign In";
+}
+
+
+<div class="row" style="margin-top: 2em">
+@if (!Model.IsAuthenticated)
+{
+    <div class="col-lg-12 text-center">
+        <a asp-area="" asp-controller="Account" asp-action="Login" class="btn btn-secondary">
+            You are not yet authenticated, please sign in.
+        </a>
+    </div>
+}
+else
+{
+    <div class="col-lg-12 text-center">
+        Hi @Model.UserName!
+        <a href="/auth/logout?continue=/">Sign Out</a>.
+    </div>
+}
+</div>
+
+<div class="row mt-5">
+    <div class="col-lg-6">
+         <h3>@ViewBag.Title</h3>
+        
+        <form action="/auth/credentials" method="post">
+            <div class="form-group">
+                <div class="form-group" data-validation-summary="userName,password"></div>
+                @Html.HiddenInputs(new { redirect = Html.Query("redirect") })
+            </div>
+            <div class="form-group">
+                <input class="form-control form-control-lg" name="userName" type="text" placeholder="UserName">
+            </div>
+            <div class="form-group">
+                <input class="form-control form-control-lg" name="password" type="password" placeholder="Password">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-lg btn-primary">Login</button>
+                <a href="/Account/Register" class="btn btn-lg btn-outline-secondary ml-2">Register New User</a>
+            </div>
+        </form>
+        
+      
+    </div>
+    <div class="col-lg-6">
+        @if (Model.IsAuthenticated)
+{
+  
+        <table id="session-info" class="table table-bordered">
+            <caption style="caption-side:top;">Authenticated User Session</caption>
+            <tbody>
+                <tr>
+                    <th>Id</th>
+                    <td>@Model.Id</td>
+                </tr>
+                <tr>
+                    <th>UserAuthId</th>
+                    <td>@Model.UserAuthId</td>
+                </tr>
+                <tr>
+                    <th>UserName</th>
+                    <td>@Model.UserName</td>
+                </tr>
+
+                <tr>
+                    <th>AuthProvider</th>
+                    <td>@Model.AuthProvider</td>
+                </tr>
+            </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+
+
+@section scripts {
+<script>
+function callApi() {
+    var $result = $(this).parent().find('.result');
+    var $apiurl = $(this).parent().find('.apiurl');
+    if (this.value) {
+        var apiUrl =  $(this).parent().attr('action') + "/" + encodeURIComponent(this.value);
+        $apiurl.html('<a href="' + apiUrl + '">' + apiUrl + '</a>');
+        $.getJSON(apiUrl)
+            .then(function (r) {
+                $result.html(r.result);
+            }).fail(function (jq, jqStatus, statusText) {
+                var err, errMsg = "The request failed with: " + (statusText || jqStatus);
+                try {
+                    err = JSON.parse(jq.responseText);
+                    errMsg = err.message || errMsg;
+                } catch (e) {
+                }
+                $result.html('<div class="error">' + errMsg + "</div>");
+            });
+    } else {
+        $result.add($apiurl).html("");
+    }
+}
+    
+$(".txtName").keyup(callApi).each(callApi);
+
+bootstrapForm(document.querySelector('form'), {
+    success: function(r) {
+        location.href = document.querySelector('[name=redirect]').value || '/';
+    }
+});
+
+bindHandlers({
+    switchUser: function(u) {
+        document.querySelector("[name=userName]").value = u;
+        document.querySelector("[name=password]").value = 'p@@55wOrd';
+    }
+});
+</script>
+}
